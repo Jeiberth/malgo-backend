@@ -6,6 +6,7 @@ use App\Models\Property;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
 
 class PropertySeeder extends Seeder
 {
@@ -36,6 +37,7 @@ class PropertySeeder extends Seeder
             'email' => 'nanis2012@hotmail.com',
             'password' => Hash::make('JeiberthLaura325.'),
         ]);
-        $admin->assignRole('admin');
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+        $admin->assignRole($adminRole);
     }
 }
