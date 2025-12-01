@@ -26,12 +26,14 @@ class TenantApplicationController extends Controller
     public function createTenantApplication(Request $request)
     {
 
+         try {
         $property = Property::whereEncrypted('sku', $request->property_id)->firstOrFail();
 
         // 1. Create the main tenant application
         $application = TenantApplication::create([
             'property_id' => $property->id,
             'move_in_date' => $request->move_in_date,
+            'comment' => '',
             'status' => 'Pendiente' // You can adjust this default status
         ]);
 
@@ -143,6 +145,19 @@ class TenantApplicationController extends Controller
         return response()->json([
             'success' => true
         ]);
+
+           } catch (\Exception $e) {
+        \Log::error('Error creating tenant application: '.$e->getMessage(), [
+            'stack' => $e->getTraceAsString(),
+            'request' => $request->all()
+        ]);
+
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while creating the tenant application.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
 
     }
 
