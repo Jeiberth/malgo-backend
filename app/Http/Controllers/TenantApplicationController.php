@@ -26,138 +26,145 @@ class TenantApplicationController extends Controller
     public function createTenantApplication(Request $request)
     {
 
-         try {
-        $property = Property::whereEncrypted('sku', $request->property_id)->firstOrFail();
+        try {
+            $property = Property::whereEncrypted('sku', $request->property_id)->firstOrFail();
 
-        // 1. Create the main tenant application
-        $application = TenantApplication::create([
-            'property_id' => $property->id,
-            'move_in_date' => $request->move_in_date,
-            'comment' => '',
-            'status' => 'Pendiente' // You can adjust this default status
-        ]);
-
-        // 2. Handle financial responsibles
-        foreach ($request->FinancialResponsible as $index => $responsibleData) {
-            $financialResponsible = new FinancialResponsible();
-            $financialResponsible->fill([
-                'tenant_application_id' => $application->id,
-                'full_name' => $responsibleData['full_name'],
-                'email' => $responsibleData['email'],
-                'phone_number' => $responsibleData['phone_number'],
-                'document_type' => $responsibleData['document_type'],
-                'document_number' => $responsibleData['document_number'],
-                'birthdate' => $responsibleData['birthdate'],
-                'nationality' => $responsibleData['nationality'],
-                'employment_status' => $responsibleData['employment_status'],
-                'monthly_salary' => $responsibleData['monthly_salary'],
-                'business_description' => $responsibleData['business_description'] ? $responsibleData['business_description'] : "No aplica",
-                'start_current_job_date' => $responsibleData['start_current_job_date'],
-                'guarantor_full_name' => $responsibleData['guarantor_full_name'],
-                'guarantor_document_type' => $responsibleData['guarantor_document_type'],
-                'guarantor_document_number' => $responsibleData['guarantor_document_number'],
-                'principal' => $index === 0 ? 1 : 0,
+            // 1. Create the main tenant application
+            $application = TenantApplication::create([
+                'property_id' => $property->id,
+                'move_in_date' => $request->move_in_date,
+                'comment' => '',
+                'status' => 'Pendiente' // You can adjust this default status
             ]);
 
+            // 2. Handle financial responsibles
+            foreach ($request->FinancialResponsible as $index => $responsibleData) {
+                $financialResponsible = new FinancialResponsible();
+                $financialResponsible->fill([
+                    'tenant_application_id' => $application->id,
+                    'full_name' => $responsibleData['full_name'],
+                    'email' => $responsibleData['email'],
+                    'phone_number' => $responsibleData['phone_number'],
+                    'document_type' => $responsibleData['document_type'],
+                    'document_number' => $responsibleData['document_number'],
+                    'birthdate' => $responsibleData['birthdate'],
+                    'nationality' => $responsibleData['nationality'],
+                    'employment_status' => $responsibleData['employment_status'],
+                    'monthly_salary' => $responsibleData['monthly_salary'],
+                    'business_description' => $responsibleData['business_description'] ? $responsibleData['business_description'] : "No aplica",
+                    'start_current_job_date' => $responsibleData['start_current_job_date'],
+                    'guarantor_full_name' => $responsibleData['guarantor_full_name'],
+                    'guarantor_document_type' => $responsibleData['guarantor_document_type'],
+                    'guarantor_document_number' => $responsibleData['guarantor_document_number'],
+                    'principal' => $index === 0 ? 1 : 0,
+                ]);
 
-            // Handle file uploads to S3
-            $fileFields = [
-                'document_id',
-                'document_certf',
-                'document_pay_1',
-                'document_pay_2',
-                'document_pay_3',
-                'document_other',
-                'guarantor_property_cert'
-            ];
 
-            foreach ($fileFields as $field) {
-                if ($request->hasFile("FinancialResponsible.$index.$field")) {
-                    $path = $request->file("FinancialResponsible.$index.$field")->store('tenant_files', 's3');
-                    $financialResponsible->$field = $path;
-                    // $financialResponsible->$field = Storage::disk('s3')->url($path);
-                }
-            }
+                // Handle file uploads to S3
+                $fileFields = [
+                    'document_id',
+                    'document_certf',
+                    'document_pay_1',
+                    'document_pay_2',
+                    'document_pay_3',
+                    'document_other',
+                    'guarantor_property_cert'
+                ];
 
-            $financialResponsible->save();
-
-            // Handle additional income
-            if (isset($responsibleData['AdditionalIncome'])) {
-                foreach ($responsibleData['AdditionalIncome'] as $incomeIndex => $income) {
-                    $additionalIncome = new AdditionalIncome();
-                    $additionalIncome->fill([
-                        'financial_responsible_id' => $financialResponsible->id,
-                        'monthly_amount' => $income['monthly_amount'],
-                        'description' => $income['description'],
-                    ]);
-
-                    if ($request->hasFile("FinancialResponsible.$index.AdditionalIncome.$incomeIndex.income_cert")) {
-                        $incomePath = $request->file("FinancialResponsible.$index.AdditionalIncome.$incomeIndex.income_cert")->store('tenant_files', 's3');
-                        $additionalIncome->income_cert = $incomePath;
-                        // $additionalIncome->income_cert = Storage::disk('s3')->url($incomePath);
+                foreach ($fileFields as $field) {
+                    if ($request->hasFile("FinancialResponsible.$index.$field")) {
+                        $path = $request->file("FinancialResponsible.$index.$field")->store('tenant_files', 's3');
+                        $financialResponsible->$field = $path;
+                        // $financialResponsible->$field = Storage::disk('s3')->url($path);
                     }
+                }
 
-                    $additionalIncome->save();
+                $financialResponsible->save();
+
+                // Handle additional income
+                if (isset($responsibleData['AdditionalIncome'])) {
+                    foreach ($responsibleData['AdditionalIncome'] as $incomeIndex => $income) {
+                        $additionalIncome = new AdditionalIncome();
+                        $additionalIncome->fill([
+                            'financial_responsible_id' => $financialResponsible->id,
+                            'monthly_amount' => $income['monthly_amount'],
+                            'description' => $income['description'],
+                        ]);
+
+                        if ($request->hasFile("FinancialResponsible.$index.AdditionalIncome.$incomeIndex.income_cert")) {
+                            $incomePath = $request->file("FinancialResponsible.$index.AdditionalIncome.$incomeIndex.income_cert")->store('tenant_files', 's3');
+                            $additionalIncome->income_cert = $incomePath;
+                            // $additionalIncome->income_cert = Storage::disk('s3')->url($incomePath);
+                        }
+
+                        $additionalIncome->save();
+                    }
                 }
             }
-        }
 
-        // 3. Handle cohabitants
-        if ($request->has('Cohabitant')) {
-            foreach ($request->Cohabitant as $cohabitantData) {
-                Cohabitant::create([
-                    'tenant_application_id' => $application->id,
-                    'first_name' => $cohabitantData['first_name'],
-                    'last_name' => $cohabitantData['last_name'],
-                    'document_number' => $cohabitantData['document_number'],
-                    'occupation' => $cohabitantData['occupation'],
-                    'age' => $cohabitantData['age'],
-                    'relationship' => $cohabitantData['relationship'],
-                ]);
+            // 3. Handle cohabitants
+            if ($request->has('Cohabitant')) {
+                foreach ($request->Cohabitant as $cohabitantData) {
+                    Cohabitant::create([
+                        'tenant_application_id' => $application->id,
+                        'first_name' => $cohabitantData['first_name'],
+                        'last_name' => $cohabitantData['last_name'],
+                        'document_number' => $cohabitantData['document_number'],
+                        'occupation' => $cohabitantData['occupation'],
+                        'age' => $cohabitantData['age'],
+                        'relationship' => $cohabitantData['relationship'],
+                    ]);
+                }
             }
-        }
 
-        // 4. Handle pets
-        if ($request->has('Pet')) {
-            foreach ($request->Pet as $petData) {
-                Pet::create([
-                    'tenant_application_id' => $application->id,
-                    'type' => $petData['type'],
-                    'sex' => $petData['sex'],
-                    'size' => $petData['size'],
-                ]);
+            // 4. Handle pets
+            if ($request->has('Pet')) {
+                foreach ($request->Pet as $petData) {
+                    Pet::create([
+                        'tenant_application_id' => $application->id,
+                        'type' => $petData['type'],
+                        'sex' => $petData['sex'],
+                        'size' => $petData['size'],
+                    ]);
+                }
             }
-        }
 
-        // 5. Handle parking needs
-        if ($request->has('ParkingNeed')) {
-            foreach ($request->ParkingNeed as $parkingData) {
-                ParkingNeed::create([
-                    'tenant_application_id' => $application->id,
-                    'vehicle_type' => $parkingData['vehicle_type'],
-                ]);
+            // 5. Handle parking needs
+            if ($request->has('ParkingNeed')) {
+                foreach ($request->ParkingNeed as $parkingData) {
+                    ParkingNeed::create([
+                        'tenant_application_id' => $application->id,
+                        'vehicle_type' => $parkingData['vehicle_type'],
+                    ]);
+                }
             }
+
+            // $emailAdmin = User::findOrFail(1); 
+            // Mail::to($emailAdmin->email)->send(new NewApplication($request->property_id));
+
+            try {
+                $emailAdmin = User::findOrFail(1); 
+                Mail::to($emailAdmin->email)->send(new NewApplication($request->property_id));
+            } catch (\Exception $mailException) {
+                \Log::error('Email failed: '.$mailException->getMessage());
+            }
+
+            return response()->json([
+                'success' => true
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error creating tenant application: '.$e->getMessage(), [
+                'stack' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'error' => 'An error occurred while creating the tenant application.'
+            ], 500);
         }
-
-        $emailAdmin = User::findOrFail(1); 
-        Mail::to($emailAdmin->email)->send(new NewApplication($request->property_id));
-
-        return response()->json([
-            'success' => true
-        ]);
-
-           } catch (\Exception $e) {
-        \Log::error('Error creating tenant application: '.$e->getMessage(), [
-            'stack' => $e->getTraceAsString(),
-            'request' => $request->all()
-        ]);
-
-        return response()->json([
-            'success' => false,
-            'message' => 'An error occurred while creating the tenant application.',
-            'error' => $e->getMessage()
-        ], 500);
-    }
 
     }
 
