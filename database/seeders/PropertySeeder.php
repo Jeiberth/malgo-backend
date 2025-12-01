@@ -31,7 +31,7 @@ class PropertySeeder extends Seeder
             ]);
         }
         // Create an admin user
-        $admin = User::create([
+        $admin = User::updateOrCreate([
             'name' => 'Admin',
             'email' => 'nanis2012@hotmail.com',
             'password' => Hash::make('JeiberthLaura325.'),
