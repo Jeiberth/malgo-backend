@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Property;
+use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Seeder;
 
 class PropertySeeder extends Seeder
@@ -28,5 +30,12 @@ class PropertySeeder extends Seeder
                 'property_group_id' => null, // Leave empty
             ]);
         }
+        // Create an admin user
+        $admin = User::create([
+            'name' => 'Admin',
+            'email' => 'nanis2012@hotmail.com',
+            'password' => Hash::make('JeiberthLaura325.'),
+        ]);
+        $admin->assignRole('admin');
     }
 }
