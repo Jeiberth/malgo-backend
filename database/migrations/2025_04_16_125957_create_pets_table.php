@@ -15,6 +15,7 @@ return new class extends Migration
             $table->foreignId('tenant_application_id')->constrained('tenant_applications');
             $table->string('type'); // Dog/Cat/etc.
             $table->string('sex'); // Male/Female
+            $table->string('size'); 
             $table->timestamps();
         });
     }
