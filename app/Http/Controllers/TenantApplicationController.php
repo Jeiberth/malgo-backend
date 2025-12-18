@@ -147,6 +147,9 @@ class TenantApplicationController extends Controller
                 Mail::to($emailAdmin->email)->send(new NewApplication($request->property_id));
             } catch (\Exception $mailException) {
                 \Log::error('Email failed: '.$mailException->getMessage());
+                return response()->json([
+                    'success' => true, "data" => $mailException->getMessage()
+                ]);
             }
 
             return response()->json([

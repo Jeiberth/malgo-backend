@@ -36,4 +36,4 @@ EXPOSE 8000
 
 # 🚀 Start server (not using php artisan serve!)
 # CMD php -S 0.0.0.0:8000 -t public
-CMD php artisan migrate:fresh --force && php artisan db:seed --class=PropertySeeder && php -S 0.0.0.0:8000 -t public
+CMD php -S 0.0.0.0:8000 -t public
