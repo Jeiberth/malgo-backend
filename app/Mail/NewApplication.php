@@ -23,7 +23,7 @@ class NewApplication extends Mailable
     public function build()
     {
         return $this->subject("Nueva Aplicacion Recibida - Malgo")
-                    ->view('emails.new_application');
+                    ->view('emails.new_application')
     }
 
    

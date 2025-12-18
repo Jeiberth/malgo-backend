@@ -8,6 +8,7 @@ use App\Http\Controllers\BillController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PropertyController;
 use Illuminate\Http\Request;
+use App\Mail\NewApplication;
 
 
 Route::post('/create/tenant/application', [TenantApplicationController::class, 'createTenantApplication']);
